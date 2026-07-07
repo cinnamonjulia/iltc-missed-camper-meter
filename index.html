@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILTC Missed Camper Meter ✦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#1a1033; --bg2:#2d1b4e; --card:#241543; --card2:#2f1d56;
+  --pink:#ff6fb5; --cyan:#4dd6ff; --gold:#ffd166; --purple:#a78bfa;
+  --red:#ff4d6d; --orange:#ff9e4d; --green:#5ef2b8;
+  --text:#f4efff; --muted:#b9a8e0;
+  --radius:22px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Baloo 2','M PLUS Rounded 1c',sans-serif;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,111,181,.25), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, rgba(77,214,255,.18), transparent 60%),
+    linear-gradient(160deg, var(--bg1), var(--bg2));
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* floating sparkles */
+.sparkle{position:fixed; pointer-events:none; font-size:14px; opacity:.5; animation:floaty 9s ease-in-out infinite; z-index:0;}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-30px) rotate(20deg)}}
+
+.wrap{max-width:1080px; margin:0 auto; padding:24px 18px 90px; position:relative; z-index:1;}
+
+header{text-align:center; margin-bottom:18px;}
+h1{
+  font-size:clamp(28px,5vw,46px); font-weight:800; letter-spacing:.5px;
+  background:linear-gradient(90deg,var(--pink),var(--gold),var(--cyan));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 0 40px rgba(255,111,181,.25);
+}
+.subtitle{color:var(--muted); font-size:15px; margin-top:2px;}
+
+/* ===== team thermometer banner ===== */
+.team-banner{
+  display:flex; align-items:center; gap:20px;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:2px solid rgba(255,255,255,.08);
+  border-radius:var(--radius); padding:18px 22px; margin:18px 0 26px;
+  box-shadow:0 10px 40px rgba(0,0,0,.35);
+  flex-wrap:wrap; justify-content:center;
+}
+.team-thermo{flex:1 1 320px; min-width:260px;}
+.thermo-track{
+  position:relative; height:34px; border-radius:20px;
+  background:rgba(0,0,0,.4); border:2px solid rgba(255,255,255,.12);
+  overflow:hidden;
+}
+.thermo-fill{
+  height:100%; border-radius:18px 0 0 18px;
+  background:linear-gradient(90deg,var(--green),var(--gold),var(--orange),var(--red));
+  background-size:400px 100%;
+  transition:width .8s cubic-bezier(.2,.9,.3,1.2);
+  box-shadow:0 0 18px rgba(255,77,109,.5);
+  min-width:0;
+}
+.thermo-ticks{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; padding:0 4px;}
+.team-count{
+  text-align:center; min-width:130px;
+}
+.team-count .num{font-size:52px; font-weight:800; line-height:1; color:var(--gold); text-shadow:0 0 24px rgba(255,209,102,.5);}
+.team-count .lbl{font-size:13px; color:var(--muted);}
+.team-mood{font-size:44px; filter:drop-shadow(0 0 10px rgba(255,255,255,.3));}
+
+/* ===== toolbar ===== */
+.toolbar{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:22px;}
+button{
+  font-family:inherit; font-weight:700; border:none; cursor:pointer;
+  border-radius:14px; padding:10px 18px; font-size:15px;
+  color:#2a1745; background:linear-gradient(135deg,var(--pink),#ff9ecf);
+  box-shadow:0 4px 14px rgba(255,111,181,.4);
+  transition:transform .12s, box-shadow .12s;
+}
+button:hover{transform:translateY(-2px) scale(1.03);}
+button:active{transform:scale(.97);}
+button.secondary{background:linear-gradient(135deg,var(--cyan),#9be9ff); box-shadow:0 4px 14px rgba(77,214,255,.35);}
+button.ghost{background:rgba(255,255,255,.1); color:var(--text); box-shadow:none; border:1.5px solid rgba(255,255,255,.18);}
+button.danger{background:linear-gradient(135deg,var(--red),#ff8fa3); box-shadow:0 4px 14px rgba(255,77,109,.35);}
+button.big{font-size:20px; padding:14px 26px; border-radius:18px;}
+button:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+
+/* ===== grid of madrichim ===== */
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+.card{
+  background:linear-gradient(160deg,var(--card),var(--card2));
+  border:2px solid rgba(255,255,255,.08);
+  border-radius:var(--radius); padding:16px 14px 14px; text-align:center;
+  cursor:pointer; position:relative;
+  transition:transform .15s, border-color .15s, box-shadow .15s;
+}
+.card:hover{transform:translateY(-4px); border-color:var(--pink); box-shadow:0 12px 32px rgba(255,111,181,.25);}
+.card .avatar-holder{width:110px; height:110px; margin:0 auto 8px; position:relative;}
+.card .avatar-holder svg{width:100%; height:100%;}
+.card h3{font-size:18px; font-weight:800; margin-bottom:2px; word-break:break-word;}
+.card .count-line{font-size:14px; color:var(--muted); margin-bottom:8px;}
+.card .count-line b{color:var(--gold); font-size:17px;}
+.rank-badge{
+  position:absolute; top:10px; left:10px; font-size:20px;
+}
+.mini-thermo{height:12px; border-radius:8px; background:rgba(0,0,0,.4); border:1.5px solid rgba(255,255,255,.12); overflow:hidden;}
+.mini-thermo .f{height:100%; background:linear-gradient(90deg,var(--green),var(--gold),var(--red)); transition:width .5s;}
+.card .quick-btns{display:flex; gap:8px; justify-content:center; margin-top:10px;}
+.card .quick-btns button{padding:6px 16px; font-size:16px; border-radius:12px;}
+
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--muted);
+  background:rgba(255,255,255,.04); border:2px dashed rgba(255,255,255,.15); border-radius:var(--radius);
+}
+.empty-state .big-emoji{font-size:60px; margin-bottom:10px;}
+
+/* ===== modal ===== */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(10,5,25,.75); backdrop-filter:blur(6px);
+  display:none; align-items:flex-start; justify-content:center; z-index:50; padding:30px 14px; overflow-y:auto;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:linear-gradient(160deg,#2b1a4f,#1e1240);
+  border:2px solid rgba(255,255,255,.12); border-radius:26px;
+  width:100%; max-width:560px; padding:26px 24px; position:relative;
+  box-shadow:0 24px 80px rgba(0,0,0,.6);
+  animation:pop .25s cubic-bezier(.2,.9,.3,1.3);
+}
+@keyframes pop{from{transform:scale(.85); opacity:0}to{transform:scale(1); opacity:1}}
+.modal h2{font-size:24px; margin-bottom:14px; text-align:center;}
+.close-x{position:absolute; top:12px; right:14px; background:none; box-shadow:none; color:var(--muted); font-size:22px; padding:4px 10px;}
+.close-x:hover{color:var(--pink);}
+
+/* avatar builder */
+.builder-preview{width:180px; height:180px; margin:0 auto 14px; filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));}
+.builder-preview svg{width:100%; height:100%;}
+.opt-group{margin-bottom:13px;}
+.opt-group label{display:block; font-size:13px; color:var(--muted); font-weight:700; margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;}
+.opt-row{display:flex; gap:8px; flex-wrap:wrap;}
+.swatch{
+  width:32px; height:32px; border-radius:50%; cursor:pointer;
+  border:3px solid transparent; transition:transform .1s;
+}
+.swatch:hover{transform:scale(1.15);}
+.swatch.sel{border-color:#fff; box-shadow:0 0 12px rgba(255,255,255,.6);}
+.chip{
+  padding:7px 14px; border-radius:12px; background:rgba(255,255,255,.08);
+  border:2px solid rgba(255,255,255,.14); cursor:pointer; font-size:14px; font-weight:700; color:var(--text);
+  transition:all .1s;
+}
+.chip:hover{background:rgba(255,255,255,.16);}
+.chip.sel{background:var(--pink); color:#2a1745; border-color:var(--pink);}
+input[type=text], textarea{
+  width:100%; font-family:inherit; font-size:16px; padding:11px 14px;
+  border-radius:14px; border:2px solid rgba(255,255,255,.15);
+  background:rgba(0,0,0,.3); color:var(--text); outline:none;
+}
+input[type=text]:focus, textarea:focus{border-color:var(--cyan);}
+.modal-actions{display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap;}
+
+/* detail view */
+.detail-avatar{width:150px; height:150px; margin:0 auto 6px;}
+.detail-avatar svg{width:100%; height:100%;}
+.detail-count{text-align:center; margin:10px 0 4px;}
+.detail-count .num{font-size:64px; font-weight:800; color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(255,209,102,.5);}
+.detail-count .lbl{color:var(--muted); font-size:14px;}
+.vert-thermo-wrap{display:flex; justify-content:center; gap:24px; align-items:flex-end; margin:14px 0;}
+.vert-thermo{
+  width:52px; height:200px; border-radius:26px 26px 30px 30px;
+  background:rgba(0,0,0,.45); border:3px solid rgba(255,255,255,.15);
+  position:relative; overflow:hidden;
+}
+.vert-thermo .vf{
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(0deg,var(--red),var(--orange),var(--gold),var(--green));
+  background-size:100% 200px; background-position:bottom;
+  transition:height .7s cubic-bezier(.2,.9,.3,1.2);
+}
+.thermo-bulb{
+  width:74px; height:74px; border-radius:50%; margin:-14px auto 0;
+  border:3px solid rgba(255,255,255,.15);
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  transition:background .5s;
+}
+.log-list{max-height:140px; overflow-y:auto; font-size:13px; color:var(--muted); margin-top:12px; text-align:left; padding:0 6px;}
+.log-list div{padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.08);}
+
+/* toast + confetti */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff;
+  padding:12px 24px; border-radius:16px; font-weight:700; z-index:99;
+  box-shadow:0 8px 30px rgba(0,0,0,.5); transition:transform .3s; pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.burst{position:fixed; pointer-events:none; z-index:98; font-size:22px; animation:burst 1s ease-out forwards;}
+@keyframes burst{
+  0%{transform:translate(0,0) scale(.6); opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(1.4); opacity:0}
+}
+footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; opacity:.7;}
+@media (max-width:520px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
+  .card .avatar-holder{width:86px; height:86px;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>✦ ILTC Missed Camper Meter ✦</h1>
+    <div class="subtitle">מדריכים — keep that thermometer cool! ❄️</div>
+  </header>
+
+  <div class="team-banner">
+    <div class="team-mood" id="teamMood">😎</div>
+    <div class="team-thermo">
+      <div class="thermo-track"><div class="thermo-fill" id="teamFill" style="width:0%"></div></div>
+      <div class="thermo-ticks" id="teamTicks"></div>
+    </div>
+    <div class="team-count">
+      <div class="num" id="teamNum">0</div>
+      <div class="lbl">missed campers all ILTC</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="openCreate()">＋ New Madrich/a</button>
+    <button class="secondary" onclick="openImport()">📋 Import Roster</button>
+    <button class="ghost" onclick="exportData()">💾 Backup</button>
+    <button class="ghost" onclick="openSettings()">⚙️</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>data saved on this device · made with ✨ for ILTC</footer>
+</div>
+
+<!-- create/edit avatar modal -->
+<div class="modal-overlay" id="builderModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('builderModal')">✕</button>
+    <h2 id="builderTitle">Create Your Character!</h2>
+    <div class="builder-preview" id="builderPreview"></div>
+    <div class="opt-group">
+      <label>Name</label>
+      <input type="text" id="nameInput" placeholder="Your name..." maxlength="30">
+    </div>
+    <div class="opt-group">
+      <label>Skin</label>
+      <div class="opt-row" id="skinRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Hair Style</label>
+      <div class="opt-row" id="hairStyleRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Hair Color</label>
+      <div class="opt-row" id="hairColorRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Eyes</label>
+      <div class="opt-row" id="eyeRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Mouth</label>
+      <div class="opt-row" id="mouthRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Extra</label>
+      <div class="opt-row" id="accRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Aura</label>
+      <div class="opt-row" id="bgRow"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="randomizeBuilder()">🎲 Random</button>
+      <button onclick="saveBuilder()" id="saveBtn">Save ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- detail modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('detailModal')">✕</button>
+    <div class="detail-avatar" id="detailAvatar"></div>
+    <h2 id="detailName" style="margin-bottom:0"></h2>
+    <div class="detail-count">
+      <div class="num" id="detailNum">0</div>
+      <div class="lbl">missed campers this ILTC</div>
+    </div>
+    <div class="vert-thermo-wrap">
+      <div>
+        <div class="vert-thermo"><div class="vf" id="detailFill" style="height:0%"></div></div>
+        <div class="thermo-bulb" id="detailBulb">🧊</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="big danger" onclick="bump(1)">＋1 missed 😱</button>
+        <button class="ghost" onclick="bump(-1)">−1 (oops, undo)</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="editCurrent()">🎨 Edit Avatar</button>
+      <button class="ghost" onclick="deleteCurrent()" style="color:var(--red)">🗑 Remove</button>
+    </div>
+    <div class="log-list" id="detailLog"></div>
+  </div>
+</div>
+
+<!-- import modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('importModal')">✕</button>
+    <h2>📋 Import Roster</h2>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:10px;">
+      Paste names — one per line. Each madrich/a gets a random anime character they can customize later!
+    </p>
+    <textarea id="importText" rows="8" placeholder="Noa Cohen&#10;Ari Levi&#10;Maya Gold&#10;..."></textarea>
+    <div class="modal-actions">
+      <button onclick="doImport()">Import ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
+    <h2>⚙️ Settings</h2>
+    <div class="opt-group">
+      <label>Personal thermometer maxes out at</label>
+      <div class="opt-row" id="maxPersonalRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Team thermometer maxes out at</label>
+      <div class="opt-row" id="maxTeamRow"></div>
+    </div>
+    <div class="opt-group">
+      <label>Restore backup</label>
+      <input type="file" id="restoreFile" accept=".json" style="color:var(--muted); font-size:13px;">
+    </div>
+    <div class="modal-actions">
+      <button class="danger" onclick="resetAllCounts()">Reset all counters to 0</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= data ================= */
+const LS_KEY = 'iltc-missed-meter-v1';
+let state = load();
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if(s && Array.isArray(s.people)) return s;
+  }catch(e){}
+  return {people:[], maxPersonal:10, maxTeam:50};
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function uid(){ return 'm'+Math.random().toString(36).slice(2,9); }
+
+/* ================= avatar system ================= */
+const SKINS = ['#ffe0c2','#f6c9a0','#e0a878','#b97f56','#8a5a3b'];
+const HAIR_COLORS = ['#2b2b35','#6b4226','#f7d774','#ff8fc8','#7ec8ff','#a78bfa','#ff6b6b','#e8e8f0','#4dd6a0','#ff9e4d'];
+const HAIR_STYLES = ['Spiky','Long','Twintails','Bob','Ponytail','Curly','Buzz'];
+const EYES = ['Sparkly','Happy','Chill','Determined'];
+const MOUTHS = ['Smile','Cat','Open','Smirk'];
+const ACCS = ['None','Glasses','Cat Ears','Headband','Flower','Star Clip'];
+const BGS = ['#ffd6ec','#cdeaff','#e4d9ff','#ffe9c7','#d3f7e4','#ffd9d9'];
+
+function avatarSVG(a, size){
+  const skin = SKINS[a.skin], hc = HAIR_COLORS[a.hairColor], bg = BGS[a.bg];
+  const hcDark = shade(hc,-25);
+  let hairBack='', hairFront='', acc='', eyes='', mouth='';
+
+  // hair behind head
+  switch(HAIR_STYLES[a.hairStyle]){
+    case 'Long':
+      hairBack = `<path d="M25 60 Q18 105 30 128 L48 118 Q40 90 42 62 Z" fill="${hc}"/>
+                  <path d="M95 60 Q102 105 90 128 L72 118 Q80 90 78 62 Z" fill="${hc}"/>`;
+      break;
+    case 'Twintails':
+      hairBack = `<path d="M22 58 Q4 80 12 112 Q26 108 30 84 Q32 68 34 60 Z" fill="${hc}"/>
+                  <path d="M98 58 Q116 80 108 112 Q94 108 90 84 Q88 68 86 60 Z" fill="${hc}"/>
+                  <circle cx="26" cy="56" r="7" fill="${hcDark}"/><circle cx="94" cy="56" r="7" fill="${hcDark}"/>`;
+      break;
+    case 'Ponytail':
+      hairBack = `<path d="M60 28 Q94 22 96 54 Q112 70 104 104 Q92 100 92 78 Q90 60 84 52 Z" fill="${hc}"/>
+                  <circle cx="93" cy="52" r="6" fill="${hcDark}"/>`;
+      break;
+  }
+  // hair front / top
+  switch(HAIR_STYLES[a.hairStyle]){
+    case 'Spiky':
+      hairFront = `<path d="M28 58 L22 32 L38 44 L42 20 L54 40 L62 16 L70 40 L82 22 L84 44 L98 32 L92 58 Q60 40 28 58 Z" fill="${hc}"/>
+                   <path d="M30 56 Q60 38 90 56 Q88 46 60 44 Q32 46 30 56 Z" fill="${hcDark}" opacity=".35"/>`;
+      break;
+    case 'Long': case 'Twintails':
+      hairFront = `<path d="M24 62 Q20 26 60 24 Q100 26 96 62 Q92 46 82 44 L78 56 L72 42 Q60 40 48 42 L42 56 L38 44 Q28 46 24 62 Z" fill="${hc}"/>`;
+      break;
+    case 'Bob':
+      hairFront = `<path d="M22 66 Q18 24 60 22 Q102 24 98 66 Q96 74 90 74 L88 48 Q86 42 78 42 L74 54 L68 40 Q60 38 52 40 L46 54 L42 42 Q34 42 32 48 L30 74 Q24 74 22 66 Z" fill="${hc}"/>`;
+      break;
+    case 'Ponytail':
+      hairFront = `<path d="M26 60 Q22 26 60 24 Q98 26 94 60 Q90 44 80 42 L74 54 L66 40 Q56 38 46 44 L40 56 Q30 48 26 60 Z" fill="${hc}"/>`;
+      break;
+    case 'Curly':
+      hairFront = `<circle cx="34" cy="40" r="13" fill="${hc}"/><circle cx="52" cy="30" r="14" fill="${hc}"/>
+                   <circle cx="72" cy="30" r="14" fill="${hc}"/><circle cx="88" cy="40" r="13" fill="${hc}"/>
+                   <circle cx="26" cy="56" r="10" fill="${hc}"/><circle cx="96" cy="56" r="10" fill="${hc}"/>
+                   <path d="M28 52 Q60 34 92 52 L92 58 Q60 44 28 58 Z" fill="${hc}"/>`;
+      break;
+    case 'Buzz':
+      hairFront = `<path d="M28 54 Q28 30 60 28 Q92 30 92 54 Q60 42 28 54 Z" fill="${hc}" opacity=".9"/>`;
+      break;
+  }
+
+  const eyeColor = '#3a2a55';
+  switch(EYES[a.eyes]){
+    case 'Sparkly':
+      eyes = `<ellipse cx="45" cy="70" rx="6.5" ry="8" fill="${eyeColor}"/><ellipse cx="75" cy="70" rx="6.5" ry="8" fill="${eyeColor}"/>
+              <circle cx="47" cy="67" r="2.4" fill="#fff"/><circle cx="77" cy="67" r="2.4" fill="#fff"/>
+              <circle cx="43.5" cy="72" r="1.2" fill="#fff"/><circle cx="73.5" cy="72" r="1.2" fill="#fff"/>`;
+      break;
+    case 'Happy':
+      eyes = `<path d="M38 70 Q45 62 52 70" stroke="${eyeColor}" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+              <path d="M68 70 Q75 62 82 70" stroke="${eyeColor}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
+      break;
+    case 'Chill':
+      eyes = `<path d="M38 69 L52 69" stroke="${eyeColor}" stroke-width="3.4" stroke-linecap="round"/>
+              <path d="M68 69 L82 69" stroke="${eyeColor}" stroke-width="3.4" stroke-linecap="round"/>
+              <ellipse cx="45" cy="72" rx="5" ry="4" fill="${eyeColor}"/><ellipse cx="75" cy="72" rx="5" ry="4" fill="${eyeColor}"/>`;
+      break;
+    case 'Determined':
+      eyes = `<path d="M37 63 L53 67" stroke="${eyeColor}" stroke-width="3" stroke-linecap="round"/>
+              <path d="M83 63 L67 67" stroke="${eyeColor}" stroke-width="3" stroke-linecap="round"/>
+              <ellipse cx="45" cy="72" rx="5.5" ry="6.5" fill="${eyeColor}"/><ellipse cx="75" cy="72" rx="5.5" ry="6.5" fill="${eyeColor}"/>
+              <circle cx="46.5" cy="70" r="1.8" fill="#fff"/><circle cx="76.5" cy="70" r="1.8" fill="#fff"/>`;
+      break;
+  }
+  switch(MOUTHS[a.mouth]){
+    case 'Smile': mouth = `<path d="M52 86 Q60 93 68 86" stroke="#c25e7a" stroke-width="3" fill="none" stroke-linecap="round"/>`; break;
+    case 'Cat':   mouth = `<path d="M52 86 Q56 91 60 86 Q64 91 68 86" stroke="#c25e7a" stroke-width="2.8" fill="none" stroke-linecap="round"/>`; break;
+    case 'Open':  mouth = `<ellipse cx="60" cy="88" rx="7" ry="5.5" fill="#8a3b52"/><ellipse cx="60" cy="90" rx="4" ry="2.5" fill="#ff9eb0"/>`; break;
+    case 'Smirk': mouth = `<path d="M53 88 Q62 90 68 84" stroke="#c25e7a" stroke-width="3" fill="none" stroke-linecap="round"/>`; break;
+  }
+  switch(ACCS[a.acc]){
+    case 'Glasses':
+      acc = `<circle cx="45" cy="70" r="11" fill="none" stroke="#2b2b35" stroke-width="2.6"/>
+             <circle cx="75" cy="70" r="11" fill="none" stroke="#2b2b35" stroke-width="2.6"/>
+             <path d="M56 70 L64 70" stroke="#2b2b35" stroke-width="2.6"/>`;
+      break;
+    case 'Cat Ears':
+      acc = `<path d="M32 40 L28 18 L48 32 Z" fill="${hc}"/><path d="M35 36 L33 25 L44 32 Z" fill="#ffb3d1"/>
+             <path d="M88 40 L92 18 L72 32 Z" fill="${hc}"/><path d="M85 36 L87 25 L76 32 Z" fill="#ffb3d1"/>`;
+      break;
+    case 'Headband':
+      acc = `<path d="M26 50 Q60 34 94 50 L94 44 Q60 28 26 44 Z" fill="#ff4d6d"/>`;
+      break;
+    case 'Flower':
+      acc = `<g transform="translate(88,42)">
+             <circle r="5" fill="#ffd166" cx="0" cy="0"/>
+             <circle r="4.5" fill="#ff8fc8" cx="-7" cy="-3"/><circle r="4.5" fill="#ff8fc8" cx="7" cy="-3"/>
+             <circle r="4.5" fill="#ff8fc8" cx="-4" cy="6"/><circle r="4.5" fill="#ff8fc8" cx="4" cy="6"/>
+             <circle r="4.5" fill="#ff8fc8" cx="0" cy="-8"/></g>`;
+      break;
+    case 'Star Clip':
+      acc = `<path d="M86 40 l3 6 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1 Z" fill="#ffd166" stroke="#e8a93d" stroke-width="1"/>`;
+      break;
+  }
+
+  return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg" ${size?`width="${size}" height="${size}"`:''}>
+    <circle cx="60" cy="62" r="56" fill="${bg}"/>
+    <circle cx="60" cy="62" r="56" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="3"/>
+    ${hairBack}
+    <path d="M42 96 Q42 108 38 118 L82 118 Q78 108 78 96 Z" fill="${skin}"/>
+    <path d="M34 118 Q60 106 86 118 L86 128 L34 128 Z" fill="${hcDark}"/>
+    <ellipse cx="60" cy="66" rx="34" ry="36" fill="${skin}"/>
+    <ellipse cx="37" cy="80" rx="5" ry="4" fill="#ff9eb0" opacity=".55"/>
+    <ellipse cx="83" cy="80" rx="5" ry="4" fill="#ff9eb0" opacity=".55"/>
+    ${eyes}${mouth}${hairFront}${acc}
+  </svg>`;
+}
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+function randomAvatar(){
+  return {
+    skin:rnd(SKINS.length), hairStyle:rnd(HAIR_STYLES.length), hairColor:rnd(HAIR_COLORS.length),
+    eyes:rnd(EYES.length), mouth:rnd(MOUTHS.length), acc:rnd(ACCS.length), bg:rnd(BGS.length)
+  };
+}
+function rnd(n){ return Math.floor(Math.random()*n); }
+
+/* ================= render main ================= */
+function teamTotal(){ return state.people.reduce((s,p)=>s+p.count,0); }
+
+function render(){
+  // team thermometer
+  const total = teamTotal();
+  const pct = Math.min(100, total/state.maxTeam*100);
+  document.getElementById('teamFill').style.width = pct+'%';
+  document.getElementById('teamNum').textContent = total;
+  document.getElementById('teamMood').textContent =
+    pct===0?'😎':pct<25?'🙂':pct<50?'😬':pct<75?'😰':pct<100?'🥵':'🌋';
+  document.getElementById('teamTicks').innerHTML =
+    [0,.25,.5,.75,1].map(f=>`<span>${Math.round(state.maxTeam*f)}</span>`).join('');
+
+  // grid
+  const grid = document.getElementById('grid');
+  if(state.people.length===0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="big-emoji">🏕️✨</div>
+      <p><b>No madrichim yet!</b><br>Hit "＋ New Madrich/a" to make your character,<br>or "📋 Import Roster" to paste everyone at once.</p>
+    </div>`;
+    return;
+  }
+  const sorted = [...state.people].sort((a,b)=>b.count-a.count || a.name.localeCompare(b.name));
+  const medals = ['🔥','🥵','😅'];
+  grid.innerHTML = sorted.map((p,i)=>{
+    const mpct = Math.min(100, p.count/state.maxPersonal*100);
+    const badge = p.count>0 && i<3 ? `<div class="rank-badge">${medals[i]}</div>` : '';
+    return `<div class="card" onclick="openDetail('${p.id}')">
+      ${badge}
+      <div class="avatar-holder">${avatarSVG(p.avatar)}</div>
+      <h3>${esc(p.name)}</h3>
+      <div class="count-line"><b>${p.count}</b> missed</div>
+      <div class="mini-thermo"><div class="f" style="width:${mpct}%"></div></div>
+      <div class="quick-btns">
+        <button class="danger" onclick="event.stopPropagation(); quickBump('${p.id}',1)">＋1</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function esc(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ================= builder ================= */
+let builderAvatar = randomAvatar();
+let editingId = null;
+
+function openCreate(){
+  editingId = null;
+  builderAvatar = randomAvatar();
+  document.getElementById('builderTitle').textContent = 'Create Your Character!';
+  document.getElementById('nameInput').value = '';
+  renderBuilder();
+  openModal('builderModal');
+  setTimeout(()=>document.getElementById('nameInput').focus(),100);
+}
+function editCurrent(){
+  const p = state.people.find(x=>x.id===detailId);
+  if(!p) return;
+  editingId = p.id;
+  builderAvatar = {...p.avatar};
+  document.getElementById('builderTitle').textContent = 'Edit Character';
+  document.getElementById('nameInput').value = p.name;
+  closeModal('detailModal');
+  renderBuilder();
+  openModal('builderModal');
+}
+function renderBuilder(){
+  document.getElementById('builderPreview').innerHTML = avatarSVG(builderAvatar);
+  mkSwatches('skinRow', SKINS, 'skin');
+  mkChips('hairStyleRow', HAIR_STYLES, 'hairStyle');
+  mkSwatches('hairColorRow', HAIR_COLORS, 'hairColor');
+  mkChips('eyeRow', EYES, 'eyes');
+  mkChips('mouthRow', MOUTHS, 'mouth');
+  mkChips('accRow', ACCS, 'acc');
+  mkSwatches('bgRow', BGS, 'bg');
+}
+function mkSwatches(rowId, colors, key){
+  document.getElementById(rowId).innerHTML = colors.map((c,i)=>
+    `<div class="swatch ${builderAvatar[key]===i?'sel':''}" style="background:${c}" onclick="setAv('${key}',${i})"></div>`).join('');
+}
+function mkChips(rowId, opts, key){
+  document.getElementById(rowId).innerHTML = opts.map((o,i)=>
+    `<div class="chip ${builderAvatar[key]===i?'sel':''}" onclick="setAv('${key}',${i})">${o}</div>`).join('');
+}
+function setAv(key,i){ builderAvatar[key]=i; renderBuilder(); }
+function randomizeBuilder(){ builderAvatar = randomAvatar(); renderBuilder(); }
+function saveBuilder(){
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){ toast('Give your character a name! ✏️'); return; }
+  if(editingId){
+    const p = state.people.find(x=>x.id===editingId);
+    if(p){ p.name = name; p.avatar = {...builderAvatar}; }
+    toast('Character updated! ✨');
+  } else {
+    state.people.push({id:uid(), name, avatar:{...builderAvatar}, count:0, log:[]});
+    toast(`Welcome, ${name}! 🎉`);
+    sparkleBurst();
+  }
+  save(); render();
+  closeModal('builderModal');
+}
+
+/* ================= detail ================= */
+let detailId = null;
+function openDetail(id){
+  detailId = id;
+  renderDetail();
+  openModal('detailModal');
+}
+function renderDetail(){
+  const p = state.people.find(x=>x.id===detailId);
+  if(!p) return;
+  document.getElementById('detailAvatar').innerHTML = avatarSVG(p.avatar);
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailNum').textContent = p.count;
+  const pct = Math.min(100, p.count/state.maxPersonal*100);
+  document.getElementById('detailFill').style.height = pct+'%';
+  const bulb = document.getElementById('detailBulb');
+  bulb.textContent = pct===0?'🧊':pct<40?'🌡️':pct<80?'🔥':'💥';
+  bulb.style.background = pct===0?'rgba(94,242,184,.25)':pct<40?'rgba(255,209,102,.3)':pct<80?'rgba(255,158,77,.35)':'rgba(255,77,109,.45)';
+  document.getElementById('detailLog').innerHTML =
+    (p.log||[]).slice(-8).reverse().map(l=>`<div>${l.d>0?'😱 +1':'😮‍💨 −1'} · ${new Date(l.t).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>`).join('')
+    || '<div style="text-align:center">no missed campers logged... legend 🌟</div>';
+}
+function bump(d){
+  const p = state.people.find(x=>x.id===detailId);
+  if(!p) return;
+  if(d<0 && p.count===0) return;
+  p.count = Math.max(0, p.count+d);
+  (p.log = p.log||[]).push({d, t:Date.now()});
+  save(); render(); renderDetail();
+  if(d>0) sparkleBurst('😱','🌡️','💢');
+}
+function quickBump(id, d){
+  const p = state.people.find(x=>x.id===id);
+  if(!p) return;
+  p.count = Math.max(0, p.count+d);
+  (p.log = p.log||[]).push({d, t:Date.now()});
+  save(); render();
+  toast(`${p.name}: ${p.count} missed 🌡️`);
+  sparkleBurst('😱','🌡️','💢');
+}
+function deleteCurrent(){
+  const p = state.people.find(x=>x.id===detailId);
+  if(!p) return;
+  if(!confirm(`Remove ${p.name} and their count? This can't be undone.`)) return;
+  state.people = state.people.filter(x=>x.id!==detailId);
+  save(); render();
+  closeModal('detailModal');
+}
+
+/* ================= import / export / settings ================= */
+function openImport(){ openModal('importModal'); setTimeout(()=>document.getElementById('importText').focus(),100); }
+function doImport(){
+  const lines = document.getElementById('importText').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  let added = 0;
+  for(const name of lines){
+    if(state.people.some(p=>p.name.toLowerCase()===name.toLowerCase())) continue;
+    state.people.push({id:uid(), name, avatar:randomAvatar(), count:0, log:[]});
+    added++;
+  }
+  save(); render();
+  closeModal('importModal');
+  document.getElementById('importText').value='';
+  toast(added?`Added ${added} madrichim! 🎉 Tap a card → 🎨 to customize`:'Those names are already in!');
+  if(added) sparkleBurst();
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'iltc-missed-meter-backup.json';
+  a.click();
+  toast('Backup downloaded 💾');
+}
+function openSettings(){
+  mkMaxRow('maxPersonalRow', [5,10,15,20,30], 'maxPersonal');
+  mkMaxRow('maxTeamRow', [25,50,75,100,150,200], 'maxTeam');
+  openModal('settingsModal');
+}
+function mkMaxRow(rowId, opts, key){
+  document.getElementById(rowId).innerHTML = opts.map(v=>
+    `<div class="chip ${state[key]===v?'sel':''}" onclick="state['${key}']=${v}; save(); render(); openSettings();">${v}</div>`).join('');
+}
+function resetAllCounts(){
+  if(!confirm('Reset EVERYONE\'s counter to 0? (Avatars stay.)')) return;
+  state.people.forEach(p=>{p.count=0; p.log=[];});
+  save(); render();
+  closeModal('settingsModal');
+  toast('Fresh start! Everyone back to 0 🧊');
+}
+document.getElementById('restoreFile').addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const s = JSON.parse(r.result);
+      if(!Array.isArray(s.people)) throw 0;
+      state = {maxPersonal:10, maxTeam:50, ...s};
+      save(); render();
+      closeModal('settingsModal');
+      toast('Backup restored! ✨');
+    }catch(_){ toast('That file doesn\'t look like a backup 😅'); }
+  };
+  r.readAsText(f);
+});
+
+/* ================= ui helpers ================= */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function sparkleBurst(...emojis){
+  if(!emojis.length) emojis = ['✨','🌟','💖','⭐'];
+  const cx = innerWidth/2, cy = innerHeight/2;
+  for(let i=0;i<10;i++){
+    const el = document.createElement('div');
+    el.className = 'burst';
+    el.textContent = emojis[i%emojis.length];
+    el.style.left = cx+'px'; el.style.top = cy+'px';
+    el.style.setProperty('--dx', (Math.random()*300-150)+'px');
+    el.style.setProperty('--dy', (Math.random()*300-150)+'px');
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 1000);
+  }
+}
+// ambient sparkles
+for(let i=0;i<12;i++){
+  const s = document.createElement('div');
+  s.className = 'sparkle';
+  s.textContent = ['✦','✧','⋆','✩'][i%4];
+  s.style.left = Math.random()*100+'vw';
+  s.style.top = Math.random()*100+'vh';
+  s.style.animationDelay = (Math.random()*8)+'s';
+  s.style.fontSize = (10+Math.random()*14)+'px';
+  document.body.appendChild(s);
+}
+
+render();
+</script>
+</body>
+</html>
