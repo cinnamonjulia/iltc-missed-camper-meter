@@ -215,6 +215,37 @@ input[type=text]:focus, textarea:focus{border-color:var(--cyan);}
 }
 .ian-sig{color:var(--gold); font-weight:700; margin-top:10px; font-size:15px;}
 
+/* bottom ian joke widget */
+.ian-corner{
+  position:fixed; bottom:14px; right:14px; z-index:40;
+  width:290px; max-width:calc(100vw - 28px);
+  background:linear-gradient(160deg,#2b1a4f,#1e1240);
+  border:2px solid rgba(255,209,102,.5); border-radius:20px;
+  padding:12px; box-shadow:0 12px 40px rgba(0,0,0,.5);
+}
+.ian-corner-top{display:flex; gap:10px; align-items:flex-start;}
+.ian-corner-avatar{width:56px; height:56px; flex:0 0 56px; animation:ianBob 3.5s ease-in-out infinite;}
+.ian-corner-avatar svg{width:100%; height:100%;}
+@keyframes ianBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.ian-corner-bubble{
+  flex:1; background:#fff; color:#2a1745; border-radius:14px; padding:9px 12px;
+  font-size:13.5px; font-weight:700; line-height:1.35; position:relative; min-height:38px;
+}
+.ian-corner-bubble::before{
+  content:''; position:absolute; left:-8px; top:16px;
+  border:8px solid transparent; border-right-color:#fff; border-left:0;
+}
+.ian-corner-bubble.thinking{color:#9a8bb5; font-style:italic;}
+.ian-joke-row{display:flex; gap:7px; margin-top:9px;}
+.ian-joke-row input{
+  flex:1; font-family:inherit; font-size:14px; padding:8px 12px;
+  border-radius:12px; border:2px solid rgba(255,255,255,.15);
+  background:rgba(0,0,0,.3); color:var(--text); outline:none; min-width:0;
+}
+.ian-joke-row input:focus{border-color:var(--gold);}
+.ian-joke-row button{padding:8px 14px; font-size:14px; border-radius:12px; background:linear-gradient(135deg,var(--gold),#ffe3a0); box-shadow:0 4px 12px rgba(255,209,102,.35);}
+.ian-corner .mini-label{font-size:10.5px; color:var(--muted); text-align:right; margin-top:5px; opacity:.8;}
+
 /* toast + confetti */
 .toast{
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
@@ -372,6 +403,19 @@ footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; o
       <button class="danger" onclick="resetAllCounts()">Reset all counters to 0</button>
     </div>
   </div>
+</div>
+
+<!-- bottom ian: joke critic -->
+<div class="ian-corner">
+  <div class="ian-corner-top">
+    <div class="ian-corner-avatar" id="ianCornerAvatar"></div>
+    <div class="ian-corner-bubble" id="ianCornerBubble">Tell me a joke.</div>
+  </div>
+  <div class="ian-joke-row">
+    <input type="text" id="jokeInput" placeholder="Your best material..." maxlength="200">
+    <button onclick="submitJoke()" id="jokeBtn">🎤</button>
+  </div>
+  <div class="mini-label">Ian Kandel · joke critic</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -728,15 +772,15 @@ function maybeIan(p){
     setTimeout(()=>openModal('ianModal'), 450);
   }
 }
-function ianSVG(){
+function ianSVG(sfx=''){
   // anime ian: swept light-brown quiff, stubble, black tee, warm lantern aura, disappointed
   return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="ianBg" cx="50%" cy="40%" r="65%">
+      <radialGradient id="ianBg${sfx}" cx="50%" cy="40%" r="65%">
         <stop offset="0%" stop-color="#ffe3ae"/><stop offset="100%" stop-color="#e8a94f"/>
       </radialGradient>
     </defs>
-    <circle cx="60" cy="62" r="56" fill="url(#ianBg)"/>
+    <circle cx="60" cy="62" r="56" fill="url(#ianBg${sfx})"/>
     <rect x="14" y="34" width="9" height="26" rx="2" fill="#ffcf7d" opacity=".8"/>
     <rect x="97" y="42" width="9" height="26" rx="2" fill="#ffcf7d" opacity=".8"/>
     <circle cx="60" cy="62" r="56" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="3"/>
@@ -756,6 +800,49 @@ function ianSVG(){
     <path d="M30 52 Q42 34 62 34 Q50 30 40 36 Q32 42 30 52 Z" fill="#a3805a" opacity=".7"/>
   </svg>`;
 }
+
+/* ================= bottom ian: joke critic ================= */
+const IAN_LINES = [
+  "Hm. I smiled on the inside. Way inside. Near where I keep my spreadsheet skills.",
+  "Not bad. I laughed at a joke once, back in 2019. Still recovering.",
+  "That's about as funny as me trying to parallel park the camp van. So, almost.",
+  "Cute. My comedy career also peaked at 'mildly amusing.'",
+  "I've heard funnier. Mostly in my own performance reviews.",
+  "I would laugh, but last time I laughed I pulled a muscle. That's where I'm at physically.",
+  "That joke and my dance moves have a lot in common. Neither should be public.",
+  "Solid effort. I told a joke like that once and the room scheduled a meeting about it.",
+  "I'm not laughing, but to be fair I didn't laugh at my own bar mitzvah speech either.",
+  "Interesting. I once brought a PowerPoint to a talent show, so who am I to judge. Still: no.",
+  "On a scale of one to funny, that's a me-at-staff-karaoke.",
+  "I get it. I just don't feel it. My therapist says that's a theme.",
+  "Ha. Anyway. My best joke is my sleep schedule during ILTC.",
+  "Almost. You know what else is almost funny? My attempt to learn TikTok dances for engagement metrics."
+];
+let lastIanLine = -1;
+function ianLine(){
+  let i;
+  do { i = rnd(IAN_LINES.length); } while(i === lastIanLine);
+  lastIanLine = i;
+  return IAN_LINES[i];
+}
+function submitJoke(){
+  const input = document.getElementById('jokeInput');
+  const bubble = document.getElementById('ianCornerBubble');
+  const btn = document.getElementById('jokeBtn');
+  if(!input.value.trim()){ bubble.textContent = "You have to actually tell one. That's how jokes work."; return; }
+  input.value = '';
+  btn.disabled = true;
+  bubble.classList.add('thinking');
+  bubble.textContent = 'Ian is processing your comedy...';
+  setTimeout(()=>{
+    bubble.classList.remove('thinking');
+    bubble.textContent = ianLine();
+    btn.disabled = false;
+    input.placeholder = 'Try again...';
+  }, 1300);
+}
+document.getElementById('jokeInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitJoke(); });
+document.getElementById('ianCornerAvatar').innerHTML = ianSVG('C');
 
 /* ================= ui helpers ================= */
 function openModal(id){ document.getElementById(id).classList.add('open'); }
