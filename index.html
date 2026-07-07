@@ -217,34 +217,62 @@ input[type=text]:focus, textarea:focus{border-color:var(--cyan);}
 
 /* bottom ian joke widget */
 .ian-corner{
-  position:fixed; bottom:14px; right:14px; z-index:40;
-  width:290px; max-width:calc(100vw - 28px);
+  position:fixed; bottom:16px; right:16px; z-index:40;
+  width:380px; max-width:calc(100vw - 32px);
   background:linear-gradient(160deg,#2b1a4f,#1e1240);
-  border:2px solid rgba(255,209,102,.5); border-radius:20px;
-  padding:12px; box-shadow:0 12px 40px rgba(0,0,0,.5);
+  border:3px solid var(--gold); border-radius:24px;
+  padding:16px; box-shadow:0 0 0 5px rgba(255,209,102,.18), 0 16px 50px rgba(0,0,0,.6);
 }
-.ian-corner-top{display:flex; gap:10px; align-items:flex-start;}
-.ian-corner-avatar{width:56px; height:56px; flex:0 0 56px; animation:ianBob 3.5s ease-in-out infinite;}
+.ian-corner-top{display:flex; gap:12px; align-items:flex-start;}
+.ian-corner-avatar{width:96px; height:96px; flex:0 0 96px; animation:ianBob 3.5s ease-in-out infinite; filter:drop-shadow(0 6px 16px rgba(232,169,79,.45));}
 .ian-corner-avatar svg{width:100%; height:100%;}
-@keyframes ianBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes ianBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .ian-corner-bubble{
-  flex:1; background:#fff; color:#2a1745; border-radius:14px; padding:9px 12px;
-  font-size:13.5px; font-weight:700; line-height:1.35; position:relative; min-height:38px;
+  flex:1; background:#fff; color:#2a1745; border-radius:16px; padding:12px 14px;
+  font-size:16px; font-weight:700; line-height:1.35; position:relative; min-height:52px;
 }
 .ian-corner-bubble::before{
-  content:''; position:absolute; left:-8px; top:16px;
-  border:8px solid transparent; border-right-color:#fff; border-left:0;
+  content:''; position:absolute; left:-9px; top:22px;
+  border:9px solid transparent; border-right-color:#fff; border-left:0;
 }
 .ian-corner-bubble.thinking{color:#9a8bb5; font-style:italic;}
-.ian-joke-row{display:flex; gap:7px; margin-top:9px;}
+.ian-joke-row{display:flex; gap:8px; margin-top:12px;}
 .ian-joke-row input{
-  flex:1; font-family:inherit; font-size:14px; padding:8px 12px;
-  border-radius:12px; border:2px solid rgba(255,255,255,.15);
+  flex:1; font-family:inherit; font-size:15px; padding:10px 14px;
+  border-radius:14px; border:2px solid rgba(255,255,255,.15);
   background:rgba(0,0,0,.3); color:var(--text); outline:none; min-width:0;
 }
 .ian-joke-row input:focus{border-color:var(--gold);}
-.ian-joke-row button{padding:8px 14px; font-size:14px; border-radius:12px; background:linear-gradient(135deg,var(--gold),#ffe3a0); box-shadow:0 4px 12px rgba(255,209,102,.35);}
-.ian-corner .mini-label{font-size:10.5px; color:var(--muted); text-align:right; margin-top:5px; opacity:.8;}
+.ian-joke-row button{padding:10px 16px; font-size:16px; border-radius:14px; background:linear-gradient(135deg,var(--gold),#ffe3a0); box-shadow:0 4px 12px rgba(255,209,102,.35);}
+.ian-corner .mini-label{font-size:11.5px; color:var(--muted); text-align:right; margin-top:6px; opacity:.85;}
+
+/* giant tube-man arrow pointing at ian */
+.ian-arrow{
+  position:fixed; bottom:245px; right:150px; z-index:39;
+  pointer-events:none; text-align:center;
+  transform-origin:bottom center;
+  animation:tubeman 1.5s ease-in-out infinite;
+}
+.ian-arrow svg{width:110px; height:170px; filter:drop-shadow(0 0 18px rgba(255,111,181,.65));}
+.ian-arrow-label{
+  font-size:20px; font-weight:800; letter-spacing:1.5px; white-space:nowrap;
+  background:linear-gradient(90deg,var(--pink),var(--gold));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 0 24px rgba(255,111,181,.4);
+  margin-bottom:-8px;
+}
+@keyframes tubeman{
+  0%,100%{transform:rotate(-10deg) scaleY(1);}
+  25%{transform:rotate(7deg) scaleY(.93);}
+  50%{transform:rotate(-12deg) scaleY(1.04);}
+  75%{transform:rotate(10deg) scaleY(.95);}
+}
+@media (max-width:640px){
+  .ian-arrow{right:calc(50% - 35px); bottom:240px;}
+  .ian-arrow svg{width:64px; height:100px;}
+  .ian-arrow-label{font-size:13px;}
+  .ian-corner-avatar{width:72px; height:72px; flex-basis:72px;}
+}
 
 /* toast + confetti */
 .toast{
@@ -406,6 +434,19 @@ footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; o
 </div>
 
 <!-- bottom ian: joke critic -->
+<div class="ian-arrow" aria-hidden="true">
+  <div class="ian-arrow-label">THE JOKE CRITIC</div>
+  <svg viewBox="0 0 110 170" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="arrowGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ff6fb5"/><stop offset="55%" stop-color="#ffd166"/><stop offset="100%" stop-color="#ff9e4d"/>
+      </linearGradient>
+    </defs>
+    <path d="M55 165 L10 95 L38 95 L38 5 L72 5 L72 95 L100 95 Z"
+      fill="url(#arrowGrad)" stroke="#fff" stroke-width="5" stroke-linejoin="round"
+      transform="rotate(18 55 85)"/>
+  </svg>
+</div>
 <div class="ian-corner">
   <div class="ian-corner-top">
     <div class="ian-corner-avatar" id="ianCornerAvatar"></div>
@@ -803,20 +844,22 @@ function ianSVG(sfx=''){
 
 /* ================= bottom ian: joke critic ================= */
 const IAN_LINES = [
-  "Hm. I smiled on the inside. Way inside. Near where I keep my spreadsheet skills.",
-  "Not bad. I laughed at a joke once, back in 2019. Still recovering.",
-  "That's about as funny as me trying to parallel park the camp van. So, almost.",
-  "Cute. My comedy career also peaked at 'mildly amusing.'",
-  "I've heard funnier. Mostly in my own performance reviews.",
-  "I would laugh, but last time I laughed I pulled a muscle. That's where I'm at physically.",
-  "That joke and my dance moves have a lot in common. Neither should be public.",
-  "Solid effort. I told a joke like that once and the room scheduled a meeting about it.",
-  "I'm not laughing, but to be fair I didn't laugh at my own bar mitzvah speech either.",
-  "Interesting. I once brought a PowerPoint to a talent show, so who am I to judge. Still: no.",
-  "On a scale of one to funny, that's a me-at-staff-karaoke.",
-  "I get it. I just don't feel it. My therapist says that's a theme.",
-  "Ha. Anyway. My best joke is my sleep schedule during ILTC.",
-  "Almost. You know what else is almost funny? My attempt to learn TikTok dances for engagement metrics."
+  "No. That's not a joke. That's a sentence that ended.",
+  "The setup promised nothing, and the punchline delivered exactly that.",
+  "I waited for the funny part. I'm still waiting. I will wait forever.",
+  "I've filled out incident reports funnier than that.",
+  "You had complete creative freedom, and you chose that.",
+  "That was the comedy equivalent of decaf. Technically present. Doing nothing.",
+  "Zero out of ten. And I grade generously — I gave my own bar mitzvah speech a two.",
+  "Comedy has rules. You broke all of them and invented worse ones.",
+  "If that joke were a camper, even I would have lost it. And losing a camper is NOT a good thing.",
+  "Our vending machine makes better jokes, and it only makes a beeping sound.",
+  "Delete that from your memory. I've already deleted it from mine.",
+  "My disappointment is measurable. Check the thermometer.",
+  "That joke needed adult supervision, and I refuse to provide it.",
+  "I've sat through icebreakers with more comedic structure than that.",
+  "That wasn't a joke. That was a cry for help with a punchline missing.",
+  "Try again. Not because it was close — because I believe in growth."
 ];
 let lastIanLine = -1;
 function ianLine(){
@@ -829,7 +872,7 @@ function submitJoke(){
   const input = document.getElementById('jokeInput');
   const bubble = document.getElementById('ianCornerBubble');
   const btn = document.getElementById('jokeBtn');
-  if(!input.value.trim()){ bubble.textContent = "You have to actually tell one. That's how jokes work."; return; }
+  if(!input.value.trim()){ bubble.textContent = "You submitted nothing. Honestly? Still your strongest material."; return; }
   input.value = '';
   btn.disabled = true;
   bubble.classList.add('thinking');
