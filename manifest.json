@@ -1,0 +1,14 @@
+{
+  "name": "ILTC Lost Teen Counter",
+  "short_name": "Lost Teens",
+  "description": "Satirical madrichim thermometer — no teens have been or will be lost at ILTC.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#1a1033",
+  "theme_color": "#1a1033",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
