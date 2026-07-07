@@ -6,6 +6,7 @@
 <title>ILTC Lost Teen Counter ✦</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg1:#1a1033; --bg2:#2d1b4e; --card:#241543; --card2:#2f1d56;
@@ -322,7 +323,7 @@ footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; o
 
   <div class="grid" id="grid"></div>
 
-  <footer>data saved on this device · made with ✨ for ILTC</footer>
+  <footer>☁️ synced live across all devices · made with ✨ for ILTC</footer>
 </div>
 
 <!-- create/edit avatar modal -->
@@ -462,18 +463,80 @@ footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; o
 <div class="toast" id="toast"></div>
 
 <script>
-/* ================= data ================= */
-const LS_KEY = 'iltc-missed-meter-v1';
-let state = load();
-function load(){
+/* ================= data (synced via supabase) ================= */
+const SUPA_URL = 'https://ptrdabputemlcfhqotrs.supabase.co';
+const SUPA_KEY = 'sb_publishable_LPWbda9pe1ANwyddXftetQ_vsAsQxX4';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+const SETTINGS_KEY = 'iltc-settings-v1';
+const OLD_LS_KEY = 'iltc-missed-meter-v1';
+let loaded = false;
+let state = {people:[], ...loadSettings()};
+function loadSettings(){
   try{
-    const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if(s && Array.isArray(s.people)) return s;
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if(s) return {maxPersonal:s.maxPersonal||10, maxTeam:s.maxTeam||50};
   }catch(e){}
-  return {people:[], maxPersonal:10, maxTeam:50};
+  return {maxPersonal:10, maxTeam:50};
 }
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function uid(){ return 'm'+Math.random().toString(36).slice(2,9); }
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify({maxPersonal:state.maxPersonal, maxTeam:state.maxTeam})); }
+function oops(err){ console.error(err); toast('Sync hiccup 😵 — check internet and retry'); }
+function rowToPerson(r){
+  const a = r.avatar || {};
+  return {id:r.id, name:r.name, count:r.count, avatar:{
+    skin:a.skin??0, hairStyle:a.hairStyle??0, hairColor:a.hairColor??0,
+    eyes:a.eyes??0, mouth:a.mouth??0, acc:a.acc??0, bg:a.bg??0
+  }};
+}
+
+async function loadPeople(){
+  const {data, error} = await db.from('people').select('*').order('created_at');
+  if(error) return oops(error);
+  state.people = data.map(rowToPerson);
+  loaded = true;
+  render();
+  migrateOldLocal(data.length);
+}
+// one-time: push pre-sync local data up to the cloud if the cloud is empty
+async function migrateOldLocal(remoteCount){
+  try{
+    const old = JSON.parse(localStorage.getItem(OLD_LS_KEY));
+    if(remoteCount===0 && old && Array.isArray(old.people) && old.people.length){
+      const rows = old.people.map(p=>({name:p.name, avatar:p.avatar, count:p.count||0}));
+      const {data, error} = await db.from('people').insert(rows).select();
+      if(error) return oops(error);
+      state.people = data.map(rowToPerson);
+      localStorage.removeItem(OLD_LS_KEY);
+      render();
+      toast('Moved your local madrichim to the cloud! ☁️');
+    }
+  }catch(e){}
+}
+// live updates from everyone else's phones
+db.channel('people-live').on('postgres_changes', {event:'*', schema:'public', table:'people'}, payload=>{
+  if(payload.eventType==='INSERT'){
+    if(!state.people.some(p=>p.id===payload.new.id)) state.people.push(rowToPerson(payload.new));
+  } else if(payload.eventType==='UPDATE'){
+    const p = state.people.find(x=>x.id===payload.new.id);
+    if(p) Object.assign(p, rowToPerson(payload.new));
+  } else if(payload.eventType==='DELETE'){
+    state.people = state.people.filter(x=>x.id!==payload.old.id);
+  }
+  render();
+  if(document.getElementById('detailModal').classList.contains('open')) renderDetail();
+}).subscribe();
+
+// optimistic count change; atomic RPC with plain-update fallback
+async function changeCount(p, d){
+  const prev = p.count;
+  p.count = Math.max(0, p.count + d);
+  render();
+  let {error} = await db.rpc('bump_count', {p_id: p.id, p_delta: d});
+  if(error){
+    const res = await db.from('people').update({count: p.count}).eq('id', p.id);
+    error = res.error;
+  }
+  if(error){ p.count = prev; render(); oops(error); }
+}
 
 /* ================= avatar system ================= */
 const SKINS = ['#ffe0c2','#f6c9a0','#e0a878','#b97f56','#8a5a3b'];
@@ -627,6 +690,13 @@ function render(){
 
   // grid
   const grid = document.getElementById('grid');
+  if(!loaded){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="big-emoji">☁️</div>
+      <p><b>Connecting to the cloud...</b></p>
+    </div>`;
+    return;
+  }
   if(state.people.length===0){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <div class="big-emoji">🏕️✨</div>
@@ -697,19 +767,27 @@ function mkChips(rowId, opts, key){
 }
 function setAv(key,i){ builderAvatar[key]=i; renderBuilder(); }
 function randomizeBuilder(){ builderAvatar = randomAvatar(); renderBuilder(); }
-function saveBuilder(){
+async function saveBuilder(){
   const name = document.getElementById('nameInput').value.trim();
   if(!name){ toast('Give your character a name! ✏️'); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
   if(editingId){
+    const {error} = await db.from('people').update({name, avatar:builderAvatar}).eq('id', editingId);
+    btn.disabled = false;
+    if(error) return oops(error);
     const p = state.people.find(x=>x.id===editingId);
     if(p){ p.name = name; p.avatar = {...builderAvatar}; }
     toast('Character updated! ✨');
   } else {
-    state.people.push({id:uid(), name, avatar:{...builderAvatar}, count:0, log:[]});
+    const {data, error} = await db.from('people').insert({name, avatar:builderAvatar}).select().single();
+    btn.disabled = false;
+    if(error) return oops(error);
+    if(!state.people.some(p=>p.id===data.id)) state.people.push(rowToPerson(data));
     toast(`Welcome, ${name}! 🎉`);
     sparkleBurst();
   }
-  save(); render();
+  render();
   closeModal('builderModal');
 }
 
@@ -731,35 +809,43 @@ function renderDetail(){
   const bulb = document.getElementById('detailBulb');
   bulb.textContent = pct===0?'🧊':pct<40?'🌡️':pct<80?'🔥':'💥';
   bulb.style.background = pct===0?'rgba(94,242,184,.25)':pct<40?'rgba(255,209,102,.3)':pct<80?'rgba(255,158,77,.35)':'rgba(255,77,109,.45)';
-  document.getElementById('detailLog').innerHTML =
-    (p.log||[]).slice(-8).reverse().map(l=>`<div>${l.d>0?'😱 +1':'😮‍💨 −1'} · ${new Date(l.t).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>`).join('')
-    || '<div style="text-align:center">no lost teens logged... legend 🌟</div>';
+  loadLog(p.id);
+}
+async function loadLog(pid){
+  const el = document.getElementById('detailLog');
+  const {data, error} = await db.from('events').select('delta,created_at')
+    .eq('person_id', pid).order('created_at', {ascending:false}).limit(8);
+  if(pid !== detailId) return;
+  if(error || !data || !data.length){
+    el.innerHTML = '<div style="text-align:center">no lost teens logged... legend 🌟</div>';
+    return;
+  }
+  el.innerHTML = data.map(l=>`<div>${l.delta>0?'😱 +1':'😮‍💨 −1'} · ${new Date(l.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>`).join('');
 }
 function bump(d){
   const p = state.people.find(x=>x.id===detailId);
   if(!p) return;
   if(d<0 && p.count===0) return;
-  p.count = Math.max(0, p.count+d);
-  (p.log = p.log||[]).push({d, t:Date.now()});
-  save(); render(); renderDetail();
+  changeCount(p, d);
+  renderDetail();
   if(d>0){ sparkleBurst('😱','🌡️','💢'); maybeIan(p); }
 }
 function quickBump(id, d){
   const p = state.people.find(x=>x.id===id);
   if(!p) return;
-  p.count = Math.max(0, p.count+d);
-  (p.log = p.log||[]).push({d, t:Date.now()});
-  save(); render();
+  changeCount(p, d);
   toast(`${p.name}: ${p.count} lost 🌡️`);
   sparkleBurst('😱','🌡️','💢');
   if(d>0) maybeIan(p);
 }
-function deleteCurrent(){
+async function deleteCurrent(){
   const p = state.people.find(x=>x.id===detailId);
   if(!p) return;
-  if(!confirm(`Remove ${p.name} and their count? This can't be undone.`)) return;
+  if(!confirm(`Remove ${p.name} and their count? This removes them for EVERYONE.`)) return;
+  const {error} = await db.from('people').delete().eq('id', detailId);
+  if(error) return oops(error);
   state.people = state.people.filter(x=>x.id!==detailId);
-  save(); render();
+  render();
   closeModal('detailModal');
 }
 
@@ -779,12 +865,15 @@ function openSettings(){
 }
 function mkMaxRow(rowId, opts, key){
   document.getElementById(rowId).innerHTML = opts.map(v=>
-    `<div class="chip ${state[key]===v?'sel':''}" onclick="state['${key}']=${v}; save(); render(); openSettings();">${v}</div>`).join('');
+    `<div class="chip ${state[key]===v?'sel':''}" onclick="state['${key}']=${v}; saveSettings(); render(); openSettings();">${v}</div>`).join('');
 }
-function resetAllCounts(){
-  if(!confirm('Reset EVERYONE\'s counter to 0? (Avatars stay.)')) return;
-  state.people.forEach(p=>{p.count=0; p.log=[];});
-  save(); render();
+async function resetAllCounts(){
+  if(!confirm('Reset EVERYONE\'s counter to 0, on every device? (Avatars stay.)')) return;
+  const {error} = await db.from('people').update({count:0}).gte('count', 0);
+  if(error) return oops(error);
+  await db.from('events').delete().gte('id', 0); // best effort; ok if policy missing
+  state.people.forEach(p=>p.count=0);
+  render();
   closeModal('settingsModal');
   toast('Fresh start! Everyone back to 0 🧊');
 }
@@ -792,14 +881,16 @@ document.getElementById('restoreFile').addEventListener('change', e=>{
   const f = e.target.files[0];
   if(!f) return;
   const r = new FileReader();
-  r.onload = ()=>{
+  r.onload = async ()=>{
     try{
       const s = JSON.parse(r.result);
       if(!Array.isArray(s.people)) throw 0;
-      state = {maxPersonal:10, maxTeam:50, ...s};
-      save(); render();
+      const rows = s.people.map(p=>({name:p.name, avatar:p.avatar, count:p.count||0}));
+      const {error} = await db.from('people').insert(rows);
+      if(error) return oops(error);
+      await loadPeople();
       closeModal('settingsModal');
-      toast('Backup restored! ✨');
+      toast('Backup restored to the cloud! ✨');
     }catch(_){ toast('That file doesn\'t look like a backup 😅'); }
   };
   r.readAsText(f);
@@ -928,6 +1019,7 @@ for(let i=0;i<12;i++){
 }
 
 render();
+loadPeople();
 </script>
 </body>
 </html>
