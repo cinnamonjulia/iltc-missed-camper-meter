@@ -38,7 +38,7 @@ body{
 .sparkle{position:fixed; pointer-events:none; font-size:14px; opacity:.5; animation:floaty 9s ease-in-out infinite; z-index:0;}
 @keyframes floaty{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-30px) rotate(20deg)}}
 
-.wrap{max-width:1080px; margin:0 auto; padding:24px 18px 90px; position:relative; z-index:1;}
+.wrap{max-width:1080px; margin:0 auto; padding:24px 18px 260px; position:relative; z-index:1;}
 
 header{text-align:center; margin-bottom:18px;}
 h1{
@@ -304,6 +304,7 @@ footer{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; o
 @media (max-width:520px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
   .card .avatar-holder{width:86px; height:86px;}
+  .wrap{padding-bottom:400px;}
 }
 </style>
 </head>
